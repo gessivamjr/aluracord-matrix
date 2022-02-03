@@ -5,8 +5,8 @@ import { useRouter } from 'next/router'
 import appConfig from '../config.json';
 import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgxMTU0OSwiZXhwIjoxOTU5Mzg3NTQ5fQ.P285NPkSrMWEKT9IiZkiXfMdUswlcn_H4bhtsCIzhdI";
-const SUPABASE_URL = "https://joyiunilsotwgroxrlhe.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0Mzg0Nzk4NCwiZXhwIjoxOTU5NDIzOTg0fQ.mLfziE4kTYhxcXkRNH7QqINjvfEbMv0TAARLD0JEDJk";
+const SUPABASE_URL = "https://faripniikykroyzjkakp.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function escutaMensagensEmTempoReal(adicionaMensagem) {
@@ -108,7 +108,7 @@ export default function ChatPage() {
                     }}
                 >
 
-                    <MessageList mensagens={listaDeMensagens}/>
+                    <MessageList mensagens={listaDeMensagens} />
 
                     <Box
                         as="form"
