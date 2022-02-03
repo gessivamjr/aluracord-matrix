@@ -1,20 +1,71 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
+import { createClient } from '@supabase/supabase-js';
 import React from 'react';
+import { useRouter } from 'next/router'
 import appConfig from '../config.json';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
+
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgxMTU0OSwiZXhwIjoxOTU5Mzg3NTQ5fQ.P285NPkSrMWEKT9IiZkiXfMdUswlcn_H4bhtsCIzhdI";
+const SUPABASE_URL = "https://joyiunilsotwgroxrlhe.supabase.co";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function escutaMensagensEmTempoReal(adicionaMensagem) {
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', (respostaLive) => {
+            adicionaMensagem(respostaLive.new);
+        })
+        .subscribe();
+}
 
 export default function ChatPage() {
 
+    const router = useRouter()
+    const usuarioLogado = router.query.username
     const [mensagem, setMensagem] = React.useState("")
     const [listaDeMensagens, setListaDeMensagens] = React.useState([])
 
+    React.useEffect(() => {
+        supabaseClient
+          .from('mensagens')
+          .select('*')
+          .order('id', { ascending: false })
+          .then(({ data }) => {
+            setListaDeMensagens(data);
+          });
+    
+        const subscription = escutaMensagensEmTempoReal((novaMensagem) => {
+          console.log('Nova mensagem:', novaMensagem);
+          console.log('listaDeMensagens:', listaDeMensagens);
+          // Quando o estado for um valor de referência (objeto/array) que deve ser retornado por completo 
+          // Passar uma função pro setState com o return, caso contrário ele não retorna nada
+          setListaDeMensagens((valorAtualDaLista) => {
+            console.log('valorAtualDaLista:', valorAtualDaLista);
+            return [
+              novaMensagem,
+              ...valorAtualDaLista
+            ]
+          });
+        });
+    
+        return () => {
+          subscription.unsubscribe();
+        }
+      }, [listaDeMensagens]);
+
     function handleNovaMensagem(novaMensagem) {
         const mensagem = {
-            de: "Greedu",
+            de: usuarioLogado,
             texto: novaMensagem,
-            id: listaDeMensagens.length,
             time: new Date().toLocaleTimeString()
         }
-        setListaDeMensagens([mensagem, ...listaDeMensagens])
+
+        supabaseClient
+            .from("mensagens")
+            .insert(mensagem)
+            .then(({ data }) => {
+                console.log(data)
+            })
         setMensagem("")
     }
 
@@ -57,14 +108,7 @@ export default function ChatPage() {
                     }}
                 >
 
-                    <MessageList mensagens={listaDeMensagens} />
-                    {/* {listaDeMensagens.map((mensagemAtual) => {
-                        return (
-                            <li key={mensagemAtual.id}>
-                                {mensagemAtual.de}: {mensagemAtual.texto}
-                            </li>
-                        )
-                    })} */}
+                    <MessageList mensagens={listaDeMensagens}/>
 
                     <Box
                         as="form"
@@ -98,6 +142,11 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        <ButtonSendSticker
+                            onStickerClick={(sticker) => {
+                                handleNovaMensagem(':sticker: ' + sticker);
+                            }}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -128,7 +177,7 @@ function MessageList(props) {
         <Box
             tag="ul"
             styleSheet={{
-                overflow: 'hidden',
+                overflowY: 'scroll',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
@@ -164,7 +213,7 @@ function MessageList(props) {
                                     marginRight: '8px',
                                     float: 'left'
                                 }}
-                                src={`https://github.com/greedu.png`}
+                                src={`https://github.com/${mensagem.de}.png`}
                             />
                             <Text tag="strong">
                                 {mensagem.de}
@@ -180,7 +229,14 @@ function MessageList(props) {
                                 {mensagem.time}
                             </Text>
                         </Box>
-                        {mensagem.texto}
+                        {/* {Operador ternário no campo de msg} */}
+                        {mensagem.texto.startsWith(':sticker:')
+                            ? (
+                                <Image src={mensagem.texto.replace(':sticker:', '')} />
+                            )
+                            : (
+                                mensagem.texto
+                            )}
                     </Text>
                 )
             })}

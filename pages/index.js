@@ -50,7 +50,7 @@ export default function PaginaInicial() {
             <Box
               onSubmit={event=>{
                 event.preventDefault();
-                router.push("/chat")
+                router.push(`/chat?username=${username}`)
               }}
               as="form"
               styleSheet={{
